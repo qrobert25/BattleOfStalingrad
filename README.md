@@ -8,9 +8,9 @@ Installation:
 2. Create the new Couchbase cluster in the URL: http://localhost:8091/ui/index.html  
     2.1. Click the button "Setup New Cluster"  
 	2.2. Set the next values:  
-        - Cluster Name: battleofstalingrad  
-        - Create Admin Username: development  
-        - Password: secret  
+                - Cluster Name: battleofstalingrad  
+                - Create Admin Username: development  
+                - Password: secret  
 	2.3. Click the button "Next" and accept the terms  
 	2.4. Click the button "Finish With Defaults"  
 	2.5. Now, into the console, click on the side bar "Buckets", and then in the top-right corner click "Add Bucket"  
