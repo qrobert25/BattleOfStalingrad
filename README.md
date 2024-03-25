@@ -2,8 +2,8 @@
 
 Installation:
 
-1. Run in the project folder the command: **docker compose up -d**
-	(This step takes a long while the first time. It is because the setting of thecouchbase php extension)
+1. Run in the project folder the command: **docker compose up -d**  
+	(This step takes a long time the first time. It is because the setting of thecouchbase php extension)
 
 2. Create the new Couchbase cluster in the URL: http://localhost:8091/ui/index.html  
     2.1. Click the button "Setup New Cluster"  
