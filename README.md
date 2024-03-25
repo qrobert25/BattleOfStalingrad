@@ -6,7 +6,7 @@ Installation:
 	(This step takes a long while the first time. It is because the setting of thecouchbase php extension)
 
 2. Create the new Couchbase cluster in the URL: http://localhost:8091/ui/index.html
-	2.1. Click the button "Setup New Cluster"
+    2.1. Click the button "Setup New Cluster"
 	2.2. Set the next values:
 		- Cluster Name: battleofstalingrad
 		- Create Admin Username: development
