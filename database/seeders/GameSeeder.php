@@ -17,8 +17,14 @@ class GameSeeder extends Seeder
     {
         // SAVE DEFAULT MAPS
         $maps = new \App\Services\Maps();
-        $maps->removeAll();
+        $existingMap = $maps->getMaps();
+
+        if (count($existingMap) > 0) {
+            $maps->removeAll();
+        }
+
         $obstacles = array();
+        usleep(2);
 
         for ($i=0; $i <= 49; $i++) {
             if ($i >= 13 && $i <= 43) {
@@ -49,6 +55,7 @@ class GameSeeder extends Seeder
             'description' => 'This is a map description for map 1',
             'obstacles' => json_encode($obstacles),
         ];
+        $maps = new \App\Services\Maps();
         $maps->save($data);
 
         // To avoid duplicate timestamps (since the loop is too fast)

@@ -133,7 +133,6 @@ RUN echo '#!/bin/bash' > /var/www/html/setup_project.sh \
     && echo 'composer install' >> /var/www/html/setup_project.sh \
     && echo 'npm install' >> /var/www/html/setup_project.sh \
     && echo 'php artisan key:generate' >> /var/www/html/setup_project.sh \
-    && echo 'php artisan db:seed --class=GameSeeder' >> /var/www/html/setup_project.sh \
     && echo 'echo "Setup completed."' >> /var/www/html/setup_project.sh \
     && chmod +x /var/www/html/setup_project.sh
 

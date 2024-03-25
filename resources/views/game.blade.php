@@ -128,10 +128,9 @@
 
                 if ($shooter['tank_health'] <= 0) {
                     // Send a POST form request to the API to update the game session status
-                    echo "<p><strong>".$shooter['name']."</strong> has been defeated</p>";
+                    echo "<p><strong>".$target['name']."</strong> has been defeated</p>";
 
                     // End the game
-
 
                 }
             } else if ($obstacle) {

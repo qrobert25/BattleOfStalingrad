@@ -82,6 +82,7 @@ class DB
 
     public function insert(String $document, array $data = [])
     {
+        
         // Insert a document
         $this->collection->upsert($document, $data);
 
@@ -89,6 +90,7 @@ class DB
         $result = $this->collection->get($document);
         $result = $result->content();
         $result['id'] = $document;
+
         return $result;
     }
 
@@ -133,9 +135,19 @@ class DB
 
     public function getDocument($document)
     {
+        $result = [];
+
         try{
             $query = "SELECT META().id AS id, * FROM `{$this->bucketName}`.`{$this->scopeName}`.`{$this->collectionName}` WHERE META().id = '$document' LIMIT 1";
             $result = $this->query($query);
+
+            if (!is_array($result)) {
+                $result = $result->rows();
+
+                if (!empty($result)) {
+                    $result = $result[0];
+                }
+            }
         } catch (\Exception $e) {
             $result = [];
         }
@@ -147,6 +159,11 @@ class DB
     {
         $query = "SELECT META().id AS id, * FROM `{$this->bucketName}`.`{$this->scopeName}`.`{$this->collectionName}`";
         $result = $this->query($query);
-        return $result->rows();
+
+        if (!is_array($result)) {
+            $result = $result->rows();
+        }
+
+        return $result;
     }
 }
