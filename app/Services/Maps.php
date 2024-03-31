@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Helpers\DB;
+use Ramsey\Uuid\Uuid;
 
 class Maps
 {
@@ -14,13 +15,19 @@ class Maps
         $this->db = new DB($this->dbCollection);
     }
 
+    public function getDbCollectionName()
+    {
+        return $this->dbCollection;
+    }
+
     public function save(array $data = [])
     {
-        $result = $this->db->countDocuments();
-        $document = ($result + 1);
+        $document = Uuid::uuid4();
+        $document = $document->toString();
+
         $data = [
             'name' => $data['name'],
-            'description' => $data['description'],
+            'size' => $data['size'],
             'obstacles' => $data['obstacles'],
             'updated_at' => date('Y-m-d H:i:s')
         ];
@@ -46,7 +53,7 @@ class Maps
      */
     public function removeAll()
     {
-        $instance = $this->db->getDbInstance();
+        $instance = $this->db->getDbCollectionInstance();
         $query = 'DELETE FROM ' . $instance . ' WHERE 1 = 1';
         $this->db->query($query);
     }

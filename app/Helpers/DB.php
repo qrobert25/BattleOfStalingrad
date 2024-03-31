@@ -52,6 +52,11 @@ class DB
 
     public function getDbInstance() : String
     {
+        return "`{$this->bucketName}`.`{$this->scopeName}`";
+    }
+
+    public function getDbCollectionInstance() : String
+    {
         return "`{$this->bucketName}`.`{$this->scopeName}`.`{$this->collectionName}`";
     }
 
@@ -103,7 +108,7 @@ class DB
     public function query(String $query) {
         try {
             $result = $this->cluster->query($query);
-            $result->rows();
+            $result = $result->rows();
         } catch (\Exception $e) {
             // Something went wrong
             $result = [];
@@ -121,10 +126,7 @@ class DB
 
             if (is_array($result)){
                 $result = $result[0]['count'];
-            } else {
-                $result = $result->rows()[0]['count'];
             }
-
         } catch (\Exception $e) {
             // Something went wrong
             $result = 0;
@@ -141,12 +143,8 @@ class DB
             $query = "SELECT META().id AS id, * FROM `{$this->bucketName}`.`{$this->scopeName}`.`{$this->collectionName}` WHERE META().id = '$document' LIMIT 1";
             $result = $this->query($query);
 
-            if (!is_array($result)) {
-                $result = $result->rows();
-
-                if (!empty($result)) {
-                    $result = $result[0];
-                }
+            if (!empty($result)) {
+                $result = $result[0];
             }
         } catch (\Exception $e) {
             $result = [];
@@ -159,10 +157,6 @@ class DB
     {
         $query = "SELECT META().id AS id, * FROM `{$this->bucketName}`.`{$this->scopeName}`.`{$this->collectionName}`";
         $result = $this->query($query);
-
-        if (!is_array($result)) {
-            $result = $result->rows();
-        }
 
         return $result;
     }

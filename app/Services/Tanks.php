@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Helpers\DB;
+use Ramsey\Uuid\Uuid;
 
 class Tanks
 {
@@ -16,10 +17,12 @@ class Tanks
 
     public function save(array $data = [])
     {
-        $result = $this->db->countDocuments();
-        $document = ($result + 1);
+        $document = Uuid::uuid4();
+        $document = $document->toString();
+
         $data = [
             'name' => $data['name'],
+            'attributes' => $data['attributes'],
             'updated_at' => date('Y-m-d H:i:s')
         ];
         $result = $this->db->insert($document, $data);
@@ -44,7 +47,7 @@ class Tanks
      */
     public function removeAll()
     {
-        $instance = $this->db->getDbInstance();
+        $instance = $this->db->getDbCollectionInstance();
         $query = 'DELETE FROM ' . $instance . ' WHERE 1 = 1';
         $this->db->query($query);
     }

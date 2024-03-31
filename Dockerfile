@@ -71,6 +71,22 @@ RUN apt -qy install dirmngr apt-transport-https lsb-release ca-certificates
 RUN curl -sL https://deb.nodesource.com/setup_18.x | bash -
 RUN apt -qy install nodejs
 
+# Install dependencies for Redis
+RUN apt install lsb-release curl gpg
+
+# Add the Redis repository
+RUN curl -fsSL https://packages.redis.io/gpg | gpg --dearmor -o /usr/share/keyrings/redis-archive-keyring.gpg
+RUN echo "deb [signed-by=/usr/share/keyrings/redis-archive-keyring.gpg] https://packages.redis.io/deb $(lsb_release -cs) main" | tee /etc/apt/sources.list.d/redis.list
+RUN apt update
+RUN apt install -y redis
+
+# Install the Redis PHP extension
+RUN pecl install redis
+
+# Enable the Redis PHP extension
+RUN echo "extension=redis.so" >> /etc/php/8.2/cli/php.ini \
+    && echo "extension=redis.so" >> /etc/php/8.2/fpm/php.ini
+
 # Configuring PHP-FPM for Laravel
 RUN echo "[www]" >> /etc/php/8.2/fpm/pool.d/www.conf \
     && echo "pm = dynamic" >> /etc/php/8.2/fpm/pool.d/www.conf \
@@ -118,6 +134,7 @@ RUN mkdir -p /nonexistent
 
 # Create the bash script to set up the project
 RUN echo '#!/bin/bash' > /var/www/html/setup_project.sh \
+    && echo 'redis-server' >> /var/www/html/setup_project.sh \
     && echo 'if [ -f /var/www/battle-of-stalingrad/.env ]; then' >> /var/www/html/setup_project.sh \
     && echo '    echo "The container has already been configured correctly."' >> /var/www/html/setup_project.sh \
     && echo '    exit 0' >> /var/www/html/setup_project.sh \

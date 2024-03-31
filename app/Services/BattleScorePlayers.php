@@ -1,13 +1,14 @@
 <?php
+
 namespace App\Services;
 
 use App\Helpers\DB;
 use Ramsey\Uuid\Uuid;
 
-class Players
+class BattleScorePlayers
 {
     private $db;
-    private $dbCollection = 'players';
+    private $dbCollection = 'battle_score_players';
 
     public function __construct()
     {
@@ -22,32 +23,33 @@ class Players
     public function save(array $data = [])
     {
         $document = Uuid::uuid4();
-        $document = $document->toString();
 
         $data = [
-            'name' => $data['name'],
-            'updated_at' => date('Y-m-d H:i:s')
+            'battle_score_id' => $data['battle_score_id'],
+            'player_id' => $data['player_id'],
+            'score' => $data['score'],
+            'created_at' => date('Y-m-d H:i:s')
         ];
 
         $result = $this->db->insert($document, $data);
         return $result;
     }
 
-    public function getPlayer($id)
+    public function getPlayerScore($id)
     {
-        $player = $this->db->getDocument($id);
-        return $player;
+        $score = $this->db->getDocument($id);
+        return $score;
     }
 
-    public function getPlayers()
+    public function getPlayerScores()
     {
-        $players = $this->db->getDocuments();
-        return $players;
+        $scores = $this->db->getDocuments();
+        return $scores;
     }
 
     /**
      * removeAll
-     * Removes all players. It is only used in the seeder.
+     * Removes all scores. It is only used in the seeder.
      */
     public function removeAll()
     {

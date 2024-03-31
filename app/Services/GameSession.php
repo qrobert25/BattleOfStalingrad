@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Helpers\DB;
+use Ramsey\Uuid\Uuid;
 
 class GameSession
 {
@@ -26,11 +27,10 @@ class GameSession
         $map = $maps[array_rand($maps)];
 
         // Create the game session
-        $result = $this->db->countDocuments();
-        $sessionDocument = ($result + 1);
+        $sessionDocument = Uuid::uuid4();
+        $sessionDocument = $sessionDocument->toString();
         $data = [
             'map_id' => $map['id'],
-            'winning_player_id' => null,
             'status' => 'active',
             'created_at' => date('Y-m-d H:i:s'),
             'updated_at' => date('Y-m-d H:i:s')
@@ -72,18 +72,21 @@ class GameSession
             'id' => $gameSession['id'],
             'map_id' => $map['id'],
             'map_name' => $map['maps']['name'],
+            'map_size' => $map['maps']['size'],
             'map_obstacles' => $map['maps']['obstacles'],
             'player1' => array(
                 'id' => $player1['id'],
                 'name' => $player1['players']['name'],
                 'tank_id' => $tanks[0]['id'],
-                'tank_name' => $tanks[0]['tanks']['name']
+                'tank_name' => $tanks[0]['tanks']['name'],
+                'attributes' => $tanks[0]['tanks']['attributes'],
             ),
             'player2' => array(
                 'id' => $player2['id'],
                 'name' => $player2['players']['name'],
                 'tank_id' => $tanks[1]['id'],
-                'tank_name' => $tanks[1]['tanks']['name']
+                'tank_name' => $tanks[1]['tanks']['name'],
+                'attributes' => $tanks[1]['tanks']['attributes'],
             ),
         ];
 
@@ -93,8 +96,10 @@ class GameSession
     public function addSessionPlayer(array $data = [])
     {
         $db = new DB($this->dbSessionPlayersCollection);
-        $result = $db->countDocuments();
-        $sessionPlayerDocument = ($result + 1);
+
+        $sessionPlayerDocument = Uuid::uuid4();
+        $sessionPlayerDocument = $sessionPlayerDocument->toString();
+
         $data = [
             'game_session_id' => $data['game_session_id'],
             'player_id' => $data['player_id'],
@@ -110,11 +115,11 @@ class GameSession
      */
     public function removeAll()
     {
-        $instance = $this->db->getDbInstance();
+        $instance = $this->db->getDbCollectionInstance();
         $this->db->query('DELETE FROM ' . $instance . ' WHERE 1 = 1');
 
         $db = new DB($this->dbSessionPlayersCollection);
-        $instance = $db->getDbInstance();
+        $instance = $db->getDbCollectionInstance();
         $db->query('DELETE FROM ' . $instance . ' WHERE 1 = 1');
     }
 }
