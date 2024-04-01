@@ -14,8 +14,10 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/v1/tanks/{id}', 'App\Http\Controllers\TanksController@getTank');
+Route::get('/v1/tank/{id}', 'App\Http\Controllers\TanksController@getTank');
+Route::get('/v1/tanks/', 'App\Http\Controllers\TanksController@getTanks');
 Route::get('/v1/map/{id}', 'App\Http\Controllers\MapsController@getMap');
+Route::get('/v1/maps/', 'App\Http\Controllers\MapsController@getMaps');
 Route::get('/v1/simulate/', 'App\Http\Controllers\GameSessionController@createGameSession');
 
 Route::post('/v1/scores/', 'App\Http\Controllers\ScoresController@saveScore');

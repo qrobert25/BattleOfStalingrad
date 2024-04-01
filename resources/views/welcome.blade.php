@@ -15,8 +15,8 @@
 
         <p>The following are the available links:</p>
         <ul>
-            <li><a href="/api/v1/tanks/1">Tank</a></li>
-            <li><a href="/api/v1/map/1">Map</a></li>
+            <li><a href="/api/v1/tanks/">Tanks</a></li>
+            <li><a href="/api/v1/maps/">Maps</a></li>
             <li><a href="/api/v1/simulate/">Simulate game</a></li>
         </ul>
     </body>

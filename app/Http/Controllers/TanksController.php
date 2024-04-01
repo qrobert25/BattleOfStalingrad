@@ -12,4 +12,11 @@ class TanksController extends Controller
         $tank = $tanks->getTank($id);
         return response()->json($tank);
     }
+
+    public function getTanks()
+    {
+        $tanks = new \App\Services\Tanks();
+        $tanks = $tanks->getTanks();
+        return response()->json($tanks);
+    }
 }
