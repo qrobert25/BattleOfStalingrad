@@ -57,6 +57,36 @@ class BattleScores
     public function getScore($id)
     {
         $score = $this->db->getDocument($id);
+
+        if (empty($score)) {
+            return [];
+        }
+
+        // get the players scores associated with the battle score
+        $mapsService = new Maps();
+        $playersService = new Players();
+        $battleScorePlayersService = new BattleScorePlayers();
+        $bspCollectionName = $battleScorePlayersService->getDbCollectionName();
+        $playerCollectionName = $playersService->getDbCollectionName();
+        $mapsCollectionName = $mapsService->getDbCollectionName();
+
+        $where = "WHERE 1 = 1";
+        $where .= " AND bsp.battle_score_id = '" . $id . "'";
+
+        $dbInstance = $this->db->getDbInstance();
+        $query = "
+            SELECT 
+                META(bsp).id AS player_score_id,
+                m.`name` AS map_name,
+                p.`name` AS player_name,
+                bsp.score
+            FROM ".$dbInstance.".`".$this->dbCollection."` AS bs
+            INNER JOIN ".$dbInstance.".`".$bspCollectionName."` AS bsp ON META(bs).id = bsp.battle_score_id 
+            INNER JOIN ".$dbInstance.".`".$playerCollectionName."` AS p ON bsp.player_id = META(p).id
+            INNER JOIN ".$dbInstance.".`".$mapsCollectionName."` AS m ON bs.map_id = META(m).id
+            $where";
+
+        $score['players'] = $this->db->query($query);
         return $score;
     }
 

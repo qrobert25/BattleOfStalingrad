@@ -28,7 +28,6 @@ class Maps
         $data = [
             'name' => $data['name'],
             'size' => $data['size'],
-            'obstacles' => $data['obstacles'],
             'updated_at' => date('Y-m-d H:i:s')
         ];
         $this->db->insert($document, $data);

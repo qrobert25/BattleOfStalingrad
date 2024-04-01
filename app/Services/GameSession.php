@@ -73,7 +73,6 @@ class GameSession
             'map_id' => $map['id'],
             'map_name' => $map['maps']['name'],
             'map_size' => $map['maps']['size'],
-            'map_obstacles' => $map['maps']['obstacles'],
             'player1' => array(
                 'id' => $player1['id'],
                 'name' => $player1['players']['name'],

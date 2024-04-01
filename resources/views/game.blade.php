@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en"></html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,6 +7,33 @@
 </head>
 <body>
     <?php
+        // Create a game map
+        $obstacles = generateMapObstacles($gameSession['map_size']);
+        $difficultLand = generateMapObstacles($gameSession['map_size'], $times = 6);
+        $map = generateMap($gameSession['map_size'], $obstacles, $difficultLand);
+
+        $player1 = array(
+            'id' => $gameSession['player1']['id'],
+            'name' => $gameSession['player1']['name'],
+            'tank_name' => $gameSession['player1']['tank_name'],
+            'tank_health' => 100,
+            'tank_position' => array(0, (count($map[0]) - 1)),
+            'tank_attributes' => $gameSession['player1']['attributes'],
+        );
+
+        $player2 = array(
+            'id' => $gameSession['player2']['id'],
+            'name' => $gameSession['player2']['name'],
+            'tank_name' => $gameSession['player2']['tank_name'],
+            'tank_health' => 100,
+            'tank_position' => array((count($map) - 1), 0),
+            'tank_attributes' => $gameSession['player2']['attributes'],
+        );
+
+        // Check if in range
+        $tank1 = new GameTank($player1['name'], $gameSession['player1']['tank_name'], $gameSession['player1']['attributes'], $player1['tank_position']);
+        $tank2 = new GameTank($player2['name'], $gameSession['player2']['tank_name'], $gameSession['player2']['attributes'], $player2['tank_position']);
+
         echo "<h1>Battle of Stalingrad</h1>";
 
         echo "<h2>Game Session</h2>";
@@ -14,62 +41,132 @@
         echo "<p>Map: " . $gameSession['map_name'] . "</p>";
         echo "<br>";
 
-        $player1 = array(
-            'id' => $gameSession['player1']['id'],
-            'name' => $gameSession['player1']['name'],
-            'tank_name' => $gameSession['player1']['tank_name'],
-            'tank_health' => 100,
-            'tank_position' => array(0, 49),
-        );
-
         echo "<p><strong>Player 1:</strong></p>";
         echo "<ul>";
         echo "<li>Name: " . $gameSession['player1']['name'] . "</li>";
         echo "<li>Tank: " . $gameSession['player1']['tank_name'] . "</li>";
         echo "<li>Initial position: " . json_encode($player1['tank_position']) . "</li>";
+        echo "<li>Attributes: " . json_encode($player1['tank_attributes']) . "</li>";
+        echo "<li>Health: " . $player1['tank_health'] . "</li>";
         echo "</ul>";
-
-        $player2 = array(
-            'id' => $gameSession['player2']['id'],
-            'name' => $gameSession['player2']['name'],
-            'tank_name' => $gameSession['player2']['tank_name'],
-            'tank_health' => 100,
-            'tank_position' => array(49, 0),
-        );
 
         echo "<p><strong>Player 2:</strong></p>";
         echo "<ul>";
         echo "<li>Name: " . $gameSession['player2']['name'] . "</li>";
         echo "<li>Tank: " . $gameSession['player2']['tank_name'] . "</li>";
         echo "<li>Initial position: " . json_encode($player2['tank_position']) . "</li>";
+        echo "<li>Attributes: " . json_encode($player2['tank_attributes']) . "</li>";
+        echo "<li>Health: " . $player2['tank_health'] . "</li>";
         echo "</ul>";
 
         echo "<h4>Let's battle</h4>";
 
-        $map = generateMap($gameSession['map_size'], $gameSession['map_obstacles']);
         
-        foreach ($map as $row) {
-            echo json_encode($row)."</br>";
+        $movements = 0;
+        $turnPlayer = 1;
+        while ($tank1->getHealth() > 0 && $tank2->getHealth() > 0) {
+            if ($turnPlayer == 1) {
+                $shooter = &$tank1;
+                $target = &$tank2;
+                $turnPlayer++;
+            } else {
+                $shooter = &$tank2;
+                $target = &$tank1;
+                $turnPlayer--;
+            }
+
+            if (!$shooter->checkShootingRange($target, $map)) {
+                $result = moveTank($shooter, $target, $map);
+                
+                // If false, the tanks cannot reach each other, so the game is over.
+                if ($result['success'] === false) {
+                    echo "<p>Game Over: ".$shooter->getName()." cannot reach ".$target->getName()."</p>";
+                   break;
+               }
+            }
+
+            $shooter->tryShooting($target, $map);
+
+            if ($target->getHealth() <= 0) {
+                break;
+            }
+
+            if ($movements >= 100) {
+                echo "<p>Game Over: Maximum number of movements reached</p>";
+                break;
+            }
+
+            $movements++;
         }
 
-        $tank1 = new GameTank($gameSession['player1']['tank_name'], $gameSession['player1']['attributes'], $player1['tank_position']);
-        $tank2 = new GameTank($gameSession['player2']['tank_name'], $gameSession['player2']['attributes'], $player2['tank_position']);
+        echo "<h4>Game Over</h4>";
+        sendScores($gameSession, $tank1, $tank2);
 
-        // $tank1->move('down', 10, $map);
-        // $tank1->move('down', 10, $map);
+        function moveTank(&$shooter, &$target, $map)
+        {
+            $return = array('success' => true);
+            
+            $shooterPosition = $shooter->getPosition();
+            $targetPosition = $target->getPosition();
 
+            $i = 0;
+            $start = [];
+            $end = [];
+            while (empty($end) && $i < 10) {
+                $grid = new BlackScorp\Astar\Grid($map);
+                $astar = new BlackScorp\Astar\Astar($grid);
 
-        // $tank1->move('right', 10, $map);
-        // $tank1->move('right', 10, $map);
-        // $tank1->move('up', 10, $map);
+                // 9 number is the obstacle
+                $astar->blocked([9]);
 
-        // $tank1->shoot($tank2, 10, $map);
-        // $tank1->shoot($tank2, 10, $map);
-        // $tank1->shoot($tank2, 10, $map);
+                $start = $grid->getPoint($shooterPosition[0], $shooterPosition[1]);
+                $end = $grid->getPoint($targetPosition[0], $targetPosition[1]);
+                $i++;
+            }
 
-        //sendScores($gameSession);
+            $steps = $astar->search($start, $end);
 
-        function sendScores($gameSession)
+            if (count($steps) === 0){
+                echo "<p>".$shooter->getName()." cannot reach ".$target->getName()."</p>";
+                $return['success'] = false;
+            } else {
+                $previousPosition = $shooterPosition;
+                $fuelRange =  $shooter->getFuelRange();
+                foreach($steps as $step){
+                    $score = $step->getScore();
+
+                    if ($score == 0) {
+                        continue;
+                    }
+
+                    $cost = $step->getCosts();
+                    $fuelRange -= $cost;
+
+                    // In this case, the tank has reached the target position.
+                    // We must prevent the tank from moving beyond the target position
+                    if ($targetPosition == [$step->getY(), $step->getX()]) {
+                        echo "<p>".$shooter->getName()." has reached the target position</p>";
+                        $shooter->setPosition([$previousPosition[0], $previousPosition[1]]);
+                        break;
+                    }
+                    
+                    // If the tank has run out of fuel, it must stop moving and
+                    if ($fuelRange <= 0) {
+                        if ($map[$step->getY()][$step->getX()] == 9) {
+                            echo "<p>".$shooter->getName()." has reached an obstacle and has run out of fuel</p>";
+                        }                        
+                        $shooter->setPosition([$step->getY(), $step->getX()]);
+                        break;
+                    }
+
+                    $previousPosition = [$step->getY(), $step->getX()];
+                }
+            }
+
+            return $return;
+        }
+
+        function sendScores($gameSession, $tank1, $tank2)
         {
             try {
                 $url = 'http://localhost:80/api/v1/scores/';
@@ -79,11 +176,11 @@
                     'game_session_id' => $gameSession['id'],
                     'player_1' => json_encode([
                         'id' => $gameSession['player1']['id'],
-                        'score' => 1000,
+                        'score' => $tank1->getScore(),
                     ]),
                     'player_2' => json_encode([
                         'id' => $gameSession['player2']['id'],
-                        'score' => 500,
+                        'score' => $tank2->getScore(),
                     ]),
                 ];
 
@@ -103,7 +200,19 @@
                     echo "<p>Failed to send scores to the API #1</p>";
                     echo "<p>Error: " . curl_error($curl) . "</p>";
                 } else {
-                    echo "<p>Scores sent successfully: ".json_encode($response)."</p>";
+                    $id = null;
+                    try {
+                        $response = json_decode($response);
+                        $id = $response->id;
+                    } catch (\Exception $e) {
+                        //
+                    }
+
+                    if (!empty($id)) {
+                        echo '<p><a href="/api/v1/scores/'.$id.'" target="_blank">Review score</a></p>';
+                    } else {
+                        echo "<p>Scores sent successfully: ".json_encode($response)."</p>";
+                    }
                 }
 
 
@@ -116,26 +225,73 @@
             
         }
 
-        function generateMap($size = array(), $obstacles = array())
+        function generateMap($size = array(), $obstacles = array(), $difficultLand = array())
         {
             $rawMap = array();
 
             for ($i = 0; $i < $size[0]; $i++) {
                 $rawMap[$i] = array();
                 for ($j = 0; $j < $size[1]; $j++) {
-                    $rawMap[$i][$j] = 0;
+                    $rawMap[$i][$j] = 1;
                 }
             }
 
             foreach ($obstacles as $obstacle) {
-                $rawMap[$obstacle[0]][$obstacle[1]] = 1;
+                $rawMap[$obstacle[0]][$obstacle[1]] = 9;
+            }
+
+            foreach ($difficultLand as $cell) {
+                $rawMap[$cell[0]][$cell[1]] = 2;
             }
 
             return $rawMap;
         }
 
+        function generateMapObstacles($dimensions = array(50, 50), $times = 1) {
+            $obstacles = array();
+
+            $map = array();
+            for ($i=0; $i < $dimensions[0]; $i++) {
+                for ($j=0; $j < $dimensions[1]; $j++) {
+                    $map[$i][$j] = 0;    
+                }
+            }
+
+            // Build a rectangle shape obstacles
+            // Per each 50 of dimensions [0], we will have 4 obstacles
+            $obstaclesQty = floor($dimensions[0] / 50 * 8 * $times);
+            for ($i=0; $i < $obstaclesQty; $i++) {
+                $obstacles = array_merge($obstacles, generateRectangleObstacle($map));
+            }
+
+            return $obstacles;
+        }
+
+        function generateRectangleObstacle($map, $dimensions = array(5, 5)) {
+            $obstacles = array();
+
+            $mapHeight = count($map);
+            $mapWidth = count($map[0]);
+
+            $x = rand(1, ($mapHeight - 1) - $dimensions[0]);
+            $y = rand(0, $mapWidth - $dimensions[1]);
+
+            for ($i=0; $i < $dimensions[0]; $i++) {
+                for ($j=0; $j < $dimensions[1]; $j++) {
+                    $newX = ($x + $i) >= $mapHeight ? ($mapHeight - 1) : $x + $i;
+                    $newY = ($y + $j) >= $mapWidth ? ($mapWidth - 1) : $y + $j;
+
+                    $map[$newX][$newY] = 1;
+                    $obstacles[] = [$newX, $newY];
+                }
+            }
+
+            return $obstacles;
+        }
+
         class GameTank
         {
+            private $playerName;
             private $name;
             private $health = 100;
             private $armor = 0;
@@ -143,9 +299,11 @@
             private $fuelRange = 6;
             private $fireRange = 3;
             private $position = array(0, 0);
+            private $score = 0;
 
-            public function __construct(String $name, $attributes = array(), $position = array(0, 0))
+            public function __construct(String $playerName, String $name, $attributes = array(), $position = array(0, 0))
             {
+                $this->playerName = $playerName;
                 $this->name = $name;
                 $this->position = $position;
 
@@ -166,155 +324,101 @@
                 }
             }
 
-            public function move($direction, $steps = 1, $map)
+            public function checkShootingRange($target, $map)
             {
-                if ($steps > $this->fuelRange) {
-                    $steps = $this->fuelRange;
+                $obstacles = false;
+                $response = false;
+
+                $distance = 0;
+                $shooterPosition = $this->getPosition();
+                $targetPosition = $target->getPosition();
+
+                if ($shooterPosition[0] == $targetPosition[0]) {
+                    $distance = abs($shooterPosition[1] - $targetPosition[1]);
+
+                    // Check if there is an obstacle between the shooter and the target
+                    foreach (range($shooterPosition[1], $targetPosition[1]) as $i) {
+                        if ($map[$shooterPosition[0]][$i] == 9) {
+                            $obstacles = true;
+                            break;
+                        }
+                    }
                 }
 
-                while ($steps > 0) {
-                    $newPosition = $this->position;
+                if ($shooterPosition[1] == $targetPosition[1]) {
+                    $distance = abs($shooterPosition[0] - $targetPosition[0]);
 
-                    switch ($direction) {
-                        case 'up':
-                            $newPosition[0] -= 1;
+                    // Check if there is an obstacle between the shooter and the target
+                    foreach (range($shooterPosition[0], $targetPosition[0]) as $i) {
+                        if ($map[$i][$shooterPosition[1]] == 9) {
+                            $obstacles = true;
                             break;
-                        case 'down':
-                            $newPosition[0] += 1;
-                            break;
-                        case 'left':
-                            $newPosition[1] -= 1;
-                            break;
-                        case 'right':
-                            $newPosition[1] += 1;
-                            break;
+                        }
                     }
-
-                    if ($newPosition[0] < 0 || $newPosition[0] > count($map) || $newPosition[1] < 0 || $newPosition[1] > count($map[0])) {
-                        echo "<p>".$this->name." cannot move to the specified position</p>";
-                        break;
-                    }
-    
-                    if ($map[$newPosition[0]][$newPosition[1]] == 1) {
-                        echo "<p>".$this->name." has encountered an obstacle. The current position is ".json_encode($this->position)."</p>";
-                        break;
-                    }
-
-                    $this->position = $newPosition;
-
-                    if ($steps == 1) {
-                        echo "<p>".$this->name." moved to position ".json_encode($this->position)."</p>";
-                    }
-
-                    $steps--;
                 }
+
+                if (!$obstacles && $distance > 0 && $distance <= $this->fireRange) {
+                    $response = true;
+                }
+
+                return $response;
             }
 
-           public function shoot(&$target, $steps = 1, $map)
+            public function tryShooting(&$target, $map)
             {
+                // Check if the target is within the fire range
+                $inRange = $this->checkShootingRange($target, $map);
+
+                if (!$inRange) {
+                    return;
+                }
+              
                 // Check if the target has already been defeated
-                if ($target->health <= 0) {
-                    //echo "<p>".$target->name." has already been defeated.</p>";
+                if ($target->getHealth() <= 0) {
+                    echo "<p>".$target->getName()." has already been defeated.</p>";
                     return;
                 }
 
-                // Checking fire range limit
-                if ($steps > $this->fireRange) {
-                    $steps = $this->fireRange;
+                $armorReduction = 0;
+                $damage = $this->damage;
+
+                if ($target->getArmor() > 0) {
+                    $armorReduction = -10;
+                    $damage -= 10;
+                    $target->setArmor($target->getArmor() - 10);
                 }
 
-                // Determine the direction of the target
-                $direction = '';
+                $target->setHealth($target->getHealth() - $damage);
 
-                if ($this->position[0] == $target->position[0]) {
-                    if ($this->position[1] < $target->position[1]) {
-                        $direction = 'right';
-                    } else {
-                        $direction = 'left';
+                echo "<p>".$this->name." shot ".$target->getName()." and caused ".$damage." damage.";
+                $this->updateScore(130);
+                
+                if ($armorReduction < 0) {
+                    echo "<br> The armor of ".$target->getName()." has been reduced by ".$armorReduction;
+                    $this->updateScore(150);
+                    
+                    if ($target->getArmor() == 0) {
+                        echo " and it has been depleted";
+                        $this->updateScore(180);
                     }
+
+                    echo ".";
                 }
 
-                if ($this->position[1] == $target->position[1]) {
-                    if ($this->position[0] < $target->position[0]) {
-                        $direction = 'down';
-                    } else {
-                        $direction = 'up';
-                    }
+                echo "<br>".$target->getName()." health is now ".$target->getHealth().".</p>";
+                echo "</p>";
+
+                if ($target->getHealth() <= 0) {
+                    echo "<p>".$target->getName()." has been defeated.</p>";
+                    echo "<p>".$this->playerName." wins the game.</p>";
+                    echo "<p>".$target->getPlayerName()." loses the game.</p>";
+                    $this->updateScore(200);
                 }
+            }
 
-                // Calculate the path of the shot to be taken
-                $path = $this->position;
-
-                // Move the shot along the path
-                while ($steps > 0) {
-                    switch ($direction) {
-                        case 'up':
-                            $path[0] -= 1;
-                            break;
-                        case 'down':
-                            $path[0] += 1;
-                            break;
-                        case 'left':
-                            $path[1] -= 1;
-                            break;
-                        case 'right':
-                            $path[1] += 1;
-                            break;
-                    }
-
-                    if ($path[0] < 0 || $path[0] >= count($map) || $path[1] < 0 || $path[1] >= count($map[0])) {
-                        echo "<p>".$this->name." shot went out of the map.</p>";
-                        echo "<p>1#: ".($path[0] < 0)."</p>";
-                        break;
-                    }
-    
-                    if ($map[$path[0]][$path[1]] == 1) {
-                        echo "<p>".$this->name." shot has encountered an obstacle.</p>";
-                        break;
-                    }
-
-                    if ($path == $target->position) {
-                        $armorReduction = 0;
-                        $damage = $this->damage;
-
-                        if ($target->armor > 0) {
-                            $armorReduction = -10;
-                            $damage -= 10;
-                            $target->armor -= 10;
-                        }
-
-                        $target->health -= $damage;
-
-                        echo "<p>".$this->name." shot ".$target->name." and caused ".$damage." damage.";
-                        
-                        if ($armorReduction < 0) {
-                            echo "<br> The armor of ".$target->name." has been reduced by ".$armorReduction;
-                            
-                            if ($target->armor == 0) {
-                                echo " and it has been depleted";
-                            }
-
-                            echo ".";
-                        }
-
-                        echo "<br>".$target->name." health is now ".$target->health.".</p>";
-
-                        echo "</p>";
-
-                        if ($target->health <= 0) {
-                            echo "<p>".$target->name." has been defeated.</p>";
-                            break;
-                        }
-
-                        return;
-                    }
-
-                    if ($steps == 1) {
-                        echo "<p>".$this->name." shot did not reach the target position</p>";
-                    }
-
-                    $steps--;
-                }
+            public function getPlayerName()
+            {
+                return $this->playerName;
             }
 
             public function getPosition()
@@ -322,9 +426,55 @@
                 return $this->position;
             }
 
+            public function setPosition($position)
+            {
+                $this->position = $position;
+                $this->updateScore(10);
+                echo "<p>".$this->name." moved to position ".json_encode($this->position)."</p>";
+            }
+
+            public function getFuelRange()
+            {
+                return $this->fuelRange;
+            }
+
             public function getName()
             {
                 return $this->name;
+            }
+
+            public function getHealth()
+            {
+                return $this->health;
+            }
+
+            public function setHealth($health)
+            {
+                if ($health < $this->health) {
+                    $this->updateScore(-15);
+                }
+
+                $this->health = $health;
+            }
+
+            public function getArmor()
+            {
+                return $this->armor;
+            }
+
+            public function setArmor($armor)
+            {
+                $this->armor = $armor;
+            }
+
+            public function getScore()
+            {
+                return $this->score;
+            }
+
+            public function updateScore($score)
+            {
+                $this->score += $score;
             }
         }
     ?>

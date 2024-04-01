@@ -41,12 +41,10 @@ class GameSeeder extends Seeder
 
         // map 1
         $size = array(50, 50);
-        $obstacles = $this->generateMapObstacles($size);
 
         $data = [
             'name' => 'Map 1',
             'size' => $size,
-            'obstacles' => $obstacles,
         ];
 
         $maps = new \App\Services\Maps();
@@ -54,12 +52,10 @@ class GameSeeder extends Seeder
 
         // map 2
         $size = array(75, 75);
-        $obstacles = $this->generateMapObstacles($size);
 
         $data = [
             'name' => 'Map 2',
             'size' => $size,
-            'obstacles' => $obstacles,
         ];
 
         $maps = new \App\Services\Maps();
@@ -67,12 +63,10 @@ class GameSeeder extends Seeder
 
         // map 3
         $size = array(100, 100);
-        $obstacles = $this->generateMapObstacles($size);
 
         $data = [
             'name' => 'Map 3',
             'size' => $size,
-            'obstacles' => $obstacles,
         ];
 
         $maps = new \App\Services\Maps();
@@ -87,8 +81,8 @@ class GameSeeder extends Seeder
             'attributes' => [
                 'armor' => 50,
                 'damage' => 50,
-                'fuel_range' => 4,
-                'fire_range' => 6,
+                'fuel_range' => 8,
+                'fire_range' => 8,
             ],
             'updated_at' => date('Y-m-d H:i:s')
         ];
@@ -99,8 +93,8 @@ class GameSeeder extends Seeder
             'attributes' => [
                 'armor' => 30,
                 'damage' => 40,
-                'fuel_range' => 6,
-                'fire_range' => 4,
+                'fuel_range' => 10,
+                'fire_range' => 10,
             ],
             'updated_at' => date('Y-m-d H:i:s')
         ];
@@ -121,47 +115,5 @@ class GameSeeder extends Seeder
         // RESET GAME SESSIONS & SESSION PLAYERS
         $gameSession = new \App\Services\GameSession();
         $gameSession->removeAll();
-    }
-
-    public function generateMapObstacles($dimensions = array(50, 50)) {
-        $obstacles = array();
-
-        $map = array();
-        for ($i=0; $i < $dimensions[0]; $i++) {
-            for ($j=0; $j < $dimensions[1]; $j++) {
-                $map[$i][$j] = 0;    
-            }
-        }
-
-        // Build a rectangle shape obstacles
-        // Per each 50 of dimensions [0], we will have 4 obstacles
-        $obstaclesQty = floor($dimensions[0] / 50 * 6);
-        for ($i=0; $i < $obstaclesQty; $i++) {
-            $obstacles = array_merge($obstacles, $this->generateRectangleObstacle($map));
-        }
-
-        return $obstacles;
-    }
-
-    public function generateRectangleObstacle($map, $dimensions = array(5, 5)) {
-        $obstacles = array();
-
-        $mapHeight = count($map);
-        $mapWidth = count($map[0]);
-
-        $x = rand(1, ($mapHeight - 1) - $dimensions[0]);
-        $y = rand(0, $mapWidth - $dimensions[1]);
-
-        for ($i=0; $i < $dimensions[0]; $i++) {
-            for ($j=0; $j < $dimensions[1]; $j++) {
-                $newX = ($x + $i) >= $mapHeight ? ($mapHeight - 1) : $x + $i;
-                $newY = ($y + $j) >= $mapWidth ? ($mapWidth - 1) : $y + $j;
-
-                $map[$newX][$newY] = 1;
-                $obstacles[] = [$newX, $newY];
-            }
-        }
-
-        return $obstacles;
     }
 }
