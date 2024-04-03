@@ -166,4 +166,4 @@ CMD service php8.2-fpm start && nginx -g 'daemon off;' & /var/www/html/setup_pro
 # 2. Open a console in the application directory.
 # 3. Run the command `docker-compose up -d` and wait for the script to finish.
 # Once you reach this point, your application will be available at `localhost:8080`.
-# If you want to access the database remotely, you can do so using the host `localhost`, port `33060`, username `development`, and password `secret`.
+# If you want to access the database remotely, you can do so using the host `localhost`, port `8091`, username `development`, and password `secret`.

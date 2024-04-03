@@ -95,7 +95,7 @@ class BattleScores
         $redisDb = new RedisDB();
         $scores = $redisDb->get($this->dailyLeaderboardKey);
 
-        if ($scores === false) {
+        if (empty($scores)) {
             $fromDate = new DateTime(date('Y-m-d 00:00:00'));
             $toDate = new DateTime(date('Y-m-d 23:59:59'));
     
@@ -122,7 +122,7 @@ class BattleScores
         $redisDb = new RedisDB();
         $scores = $redisDb->get($this->weeklyLeaderboardKey);
 
-        if ($scores === false) {
+        if (empty($scores)) {
             $fromDate = new DateTime(date('Y-m-d 00:00:00'));
             $fromDate->modify('Monday this week');
             $filters['fromDate'] = $fromDate->format('Y-m-d 00:00:00');
@@ -150,16 +150,14 @@ class BattleScores
     {
         $redisDb = new RedisDB();
         $scores = $redisDb->get($this->monthlyLeaderboardKey);
-
-        if ($scores === false) {
+        if (empty($scores)) {
             $fromDate = new DateTime(date('Y-m-d 00:00:00'));
             $fromDate->modify('first day of this month');
             $filters['fromDate'] = $fromDate->format('Y-m-d 00:00:00');
 
             $toDate = new DateTime(date('Y-m-d 23:59:59', strtotime($fromDate->format('Y-m-d'))));
             $toDate->modify('last day of this month');
-            $filters['toDate'] = $fromDate->format('Y-m-d 23:59:59');
-            
+            $filters['toDate'] = $toDate->format('Y-m-d 23:59:59');
             $scores = $this->getLeaderboard($filters);
 
             $now = new DateTime();

@@ -9,6 +9,9 @@ class GameSessionController extends Controller
         $gameSessionService = new \App\Services\GameSession();
         $gameSession = $gameSessionService->createGameSession();
 
-        return view('game', compact('gameSession'));
+        $simulationService = new \App\Services\Simulation();
+        $simulation = $simulationService->simulate($gameSession);
+
+        return response()->json($simulation);
     }
 }
